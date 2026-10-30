@@ -47,10 +47,10 @@ if (!class_exists('R3MI_mulitple_block')) {
         public function image_size_names_choose_func($sizes)
         {
             return array_merge($sizes, [
-                'agb-square'    => __('Square', 'r3mi-multi-block'),
-                'agb-landscape' => __('Landscape', 'r3mi-multi-block'),
-                'agb-portrait'  => __('Portrait', 'r3mi-multi-block'),
-                'agb-wide'      => __('Wide', 'r3mi-multi-block'),
+                'agb-square'    => __('Square', SLUG),
+                'agb-landscape' => __('Landscape', SLUG),
+                'agb-portrait'  => __('Portrait', SLUG),
+                'agb-wide'      => __('Wide', SLUG),
             ]);
         }
 
@@ -61,8 +61,8 @@ if (!class_exists('R3MI_mulitple_block')) {
             array_unshift(
                 $categories,
                 array(
-                    'slug'  => 'r3mi-multi-block',
-                    'title' => __('R3Mi Multi Block', 'r3mi-multi-block'),
+                    'slug'  => SLUG,
+                    'title' => __('R3Mi Multi Block', SLUG),
                     'icon'  => 'info-outline',
                 )
             );

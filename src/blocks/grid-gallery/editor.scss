@@ -34,6 +34,10 @@
             font-size: .875em;
             text-align: center;
         }
+
+        &:hover .agb-image-actions{
+            display: block;
+        }
     }
 
     .agb-image-actions {
@@ -41,6 +45,7 @@
         top: 0;
         right: 0;
         padding: 10px;
+        display: none;
     }
 
     .agb-drag-handle {
