@@ -1,0 +1,23 @@
+{
+  "name": "gutenburg-multiple-block",
+  "version": "1.0.0",
+  "description": "A collection of customizable Gutenberg blocks for WordPress.",
+  "private": true,
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "format": "wp-scripts format",
+    "lint:js": "wp-scripts lint-js",
+    "lint:css": "wp-scripts lint-style"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.0.0",
+    "ajv": "^8.20.0",
+    "ajv-keywords": "^5.1.0"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2"
+  }
+}

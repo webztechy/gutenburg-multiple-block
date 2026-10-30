@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "multiblock/polaroids-gallery",
+  "version": "1.0.0",
+  "title": "Polaroids Gallery",
+  "category": "r3mi-multi-block",
+  "icon": "images-alt2",
+  "description": "Create responsive image sliders.",
+  "keywords": ["gallery", "images", "photos"],
+  "textdomain": "gutenburg-multiple-block",
+  "attributes": {
+    "images": {
+      "type": "array",
+      "default": []
+    },
+    "columns": {
+      "type": "number",
+      "default": 3
+    },
+    "gap": {
+      "type": "number",
+      "default": 12
+    },
+    "roundedCorners": {
+      "type": "boolean",
+      "default": true
+    },
+    "showCaptions": {
+      "type": "boolean",
+      "default": false
+    },
+    "imageSize": {
+      "type": "string",
+      "default": "full"
+    },
+    "backgroundColor": {
+      "type": "string",
+      "default": "#ffffff"
+    }
+  },
+  "example": {
+    "attributes": {
+      "columns": 3,
+      "gap": 16,
+      "images": [
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-1.jpg",
+          "alt": "Mountain landscape"
+        },
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-2.jpg",
+          "alt": "Forest landscape"
+        },
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-3.jpg",
+          "alt": "Mountain lake"
+        },
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-4.jpg",
+          "alt": "Mountain lake"
+        },
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-5.jpg",
+          "alt": "Forest landscape"
+        },
+        {
+          "url": "../wp-content/plugins/gutenburg-multiple-block/assets/images/gallery-6.jpg",
+          "alt": "Mountain landscape"
+        }
+      ]
+    },
+    "viewportWidth": 800
+  },
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "viewScript": "file:./view.js",
+  "style": "file:./style-index.css"
+}
