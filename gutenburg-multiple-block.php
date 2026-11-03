@@ -17,8 +17,6 @@ if (! defined('ABSPATH')) {
 
 
 define('R3MI_BLOCK_SLUG', 'r3mi-multi-block');
-define('R3MI_BLOCK_SLUG_GRID', 'r3mi-block-gallery-grid');
-// define('R3MI_BLOCK_SLUG_POLAROIDS', 'r3mi-block-gallery-polaroids');
 
 if (!class_exists('R3MI_mulitple_block')) {
 
@@ -27,8 +25,6 @@ if (!class_exists('R3MI_mulitple_block')) {
         public function __construct()
         {
             add_action('init',  array($this, 'register_gallery_block'));
-            add_action('init', array($this, 'agb_register_gallery_patterns'));
-
             add_action('image_size_names_choose', array($this, 'image_size_names_choose_func'));
             add_filter(
                 'block_categories_all',
@@ -37,7 +33,9 @@ if (!class_exists('R3MI_mulitple_block')) {
                 2
             );
 
-
+            add_action('enqueue_block_assets', function () {
+                wp_enqueue_style('dashicons');
+            });
 
             self::creating_thumbnails();
         }
@@ -105,45 +103,6 @@ if (!class_exists('R3MI_mulitple_block')) {
                     error_log('AGB: Registered block: ' . $block_dir);
                 }
             }
-        }
-
-        function agb_register_gallery_patterns()
-        {
-            // It will show in the pattern tab
-            register_block_pattern(
-                'multiblock/grid-gallery',
-                array(
-                    'title'       => __('Grid Gallery ', R3MI_BLOCK_SLUG_GRID),
-                    'description' => __('A grid gallery layout.', R3MI_BLOCK_SLUG_GRID),
-                    'categories'  => array('gallery', 'portfolio'),
-                    'content'     => '
-                                    <!-- wp:group {"layout":{"type":"constrained"}} -->
-                                    <div class="wp-block-group">
-
-                                        <!-- wp:heading {"textAlign":"center"} -->
-                                        <h2 class="wp-block-heading has-text-align-center">
-                                            My Portfolio
-                                        </h2>
-                                        <!-- /wp:heading -->
-
-                                        <!-- wp:paragraph {"align":"center"} -->
-                                        <p class="has-text-align-center">
-                                            Explore my latest photography.
-                                        </p>
-                                        <!-- /wp:paragraph -->
-
-                                        <!-- wp:gallery {"columns":3,"linkTo":"none"} -->
-                                        <figure class="wp-block-gallery has-nested-images columns-3">
-                                        </figure>
-                                        <!-- /wp:gallery -->
-
-                                    </div>
-                                    <!-- /wp:group -->
-                                ',
-                    'source' => 'plugin',
-                    'viewportWidth' => 1200,
-                )
-            );
         }
     }
 

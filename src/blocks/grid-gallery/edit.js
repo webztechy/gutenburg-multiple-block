@@ -9,7 +9,6 @@ import {
   BlockControls,
 } from "@wordpress/block-editor";
 
-
 import {
   Button,
   TabPanel,
@@ -26,7 +25,13 @@ import {
   ToolbarDropdownMenu,
   MenuItem,
   Dashicon,
+  SnackbarList,
+  Spinner,
 } from "@wordpress/components";
+import { useState } from "@wordpress/element";
+
+import { useDispatch, useSelect } from "@wordpress/data";
+import { store as noticesStore } from "@wordpress/notices";
 
 import {
   DndContext,
@@ -46,6 +51,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
+import { GalleryToolbar } from "./includes/gallery-toolbar";
 
 const R3MI_BLOCK_SLUG_GRID = "r3mi-block-gallery-grid";
 
@@ -113,33 +119,6 @@ function SortableImage({
         }}
       />
 
-      {/* Individual image toolbar */}
-      {/* <div className="agb-image-toolbar">
-        <ToolbarGroup>
-          <ToolbarButton
-            icon="visibility"
-            label={__("Lightbox", R3MI_BLOCK_SLUG_GRID)}
-            isActive={!!image.agbLightbox}
-            onClick={() =>
-              updateImage(index, {
-                agbLightbox: !image.agbLightbox,
-              })
-            }
-          />
-
-          <ToolbarButton
-            icon="search"
-            label={__("Zoom", R3MI_BLOCK_SLUG_GRID)}
-            isActive={!!image.agbZoom}
-            onClick={() =>
-              updateImage(index, {
-                agbZoom: !image.agbZoom,
-              })
-            }
-          />
-        </ToolbarGroup>
-      </div> */}
-
       {/* Drag handle */}
       <button
         type="button"
@@ -148,9 +127,7 @@ function SortableImage({
         {...listeners}
         aria-label={`Drag image ${index + 1}`}
         title={__("Drag to reorder", R3MI_BLOCK_SLUG_GRID)}
-      >
-        ⠿
-      </button>
+      ></button>
 
       {showCaptions && image.caption && (
         <figcaption>{image.caption}</figcaption>
@@ -170,9 +147,6 @@ function SortableImage({
             )}
           />
         </MediaUploadCheck>
-
-        <Dashicon icon="visibility" />
-
         <Button
           variant="tertiary"
           isDestructive
@@ -186,83 +160,14 @@ function SortableImage({
   );
 }
 
-function GalleryToolbar({ setAttributes, columns }) {
-  return (
-    <BlockControls>
-      {/* <ToolbarGroup>
-        <ToolbarButton
-          icon="grid-view"
-          label="Grid Layout"
-          onClick={() => setAttributes({ layout: "grid" })}
-        />
-
-        <ToolbarButton
-          icon="screenoptions"
-          label="Masonry Layout"
-          onClick={() => setAttributes({ layout: "masonry" })}
-        />
-      </ToolbarGroup> */}
-
-      <ToolbarGroup>
-        <ToolbarDropdownMenu
-          icon="screenoptions"
-          label="Gap"
-          controls={[
-            {
-              title: "10",
-              onClick: () => setAttributes({ gap: 10 }),
-            },
-            {
-              title: "20",
-              onClick: () => setAttributes({ gap: 20 }),
-            },
-            {
-              title: "30",
-              onClick: () => setAttributes({ gap: 30 }),
-            },
-            {
-              title: "40",
-              onClick: () => setAttributes({ gap: 40 }),
-            },
-            {
-              title: "50",
-              onClick: () => setAttributes({ gap: 50 }),
-            },
-          ]}
-        />
-
-        <ToolbarDropdownMenu
-          icon="columns"
-          label="Gallery Columns"
-          controls={[
-            {
-              title: "2 Columns",
-              onClick: () => setAttributes({ columns: 2 }),
-            },
-            {
-              title: "3 Columns",
-              onClick: () => setAttributes({ columns: 3 }),
-            },
-            {
-              title: "4 Columns",
-              onClick: () => setAttributes({ columns: 4 }),
-            },
-            {
-              title: "5 Columns",
-              onClick: () => setAttributes({ columns: 5 }),
-            },
-            {
-              title: "6 Columns",
-              onClick: () => setAttributes({ columns: 6 }),
-            },
-          ]}
-        />
-      </ToolbarGroup>
-    </BlockControls>
-  );
-}
-
 export default function Edit({ attributes, setAttributes }) {
+  const { createSuccessNotice, createErrorNotice } = useDispatch(noticesStore);
+  const notices = useSelect((select) => select(noticesStore).getNotices(), []);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMulti, setIsUploadingMulti] = useState(false);
+  const [isImageDragging, setIsImageDragging] = useState(false);
+
   const {
     images = [],
     columns = 3,
@@ -290,7 +195,7 @@ export default function Edit({ attributes, setAttributes }) {
   );
 
   // Add images
-  const addImages = (media) => {
+  const addImages = (media, isUpload = false) => {
     const selectedImages = Array.isArray(media) ? media : [media];
 
     const newImages = selectedImages
@@ -312,9 +217,75 @@ export default function Edit({ attributes, setAttributes }) {
       .filter((image) => image.url);
 
     // Append instead of replacing existing images
-    setAttributes({
-      images: [...images, ...newImages],
-    });
+    //setAttributes({ images: newImages });
+    if (isUpload) {
+      setAttributes({
+        images: [...images, ...newImages],
+      });
+    } else {
+      setAttributes({ images: newImages });
+    }
+  };
+
+  // Upload images, drop
+  const uploadImages = async (files) => {
+    const imageFiles = Array.from(files).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+
+    if (!imageFiles.length) {
+      createErrorNotice(
+        __("Please select valid image files.", R3MI_BLOCK_SLUG_GRID),
+        { type: "snackbar" },
+      );
+      return;
+    }
+
+    setIsUploadingMulti(true);
+
+    try {
+      const uploadedImages = await Promise.all(
+        imageFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch(`${wpApiSettings.root}wp/v2/media`, {
+            method: "POST",
+            headers: {
+              "X-WP-Nonce": wpApiSettings.nonce,
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Upload failed");
+          }
+
+          const media = await response.json();
+
+          return {
+            id: media.id,
+            url: media.source_url,
+            alt: media.alt_text || "",
+          };
+        }),
+      );
+
+      addImages(uploadedImages, true);
+
+      createSuccessNotice(
+        __("Images uploaded successfully!", R3MI_BLOCK_SLUG_GRID),
+        { type: "snackbar" },
+      );
+    } catch (error) {
+      console.error(error);
+
+      createErrorNotice(__("Image upload failed!", R3MI_BLOCK_SLUG_GRID), {
+        type: "snackbar",
+      });
+    } finally {
+      setIsUploadingMulti(false);
+    }
   };
 
   // Update image
@@ -369,23 +340,185 @@ export default function Edit({ attributes, setAttributes }) {
     });
   };
 
-  // Media upload button
-  const mediaUpload = (
-    <MediaUploadCheck>
-      <MediaUpload
-        onSelect={addImages}
-        allowedTypes={["image"]}
-        multiple
-        gallery
-        value={images.map((image) => image.id).filter(Boolean)}
-        render={({ open }) => (
-          <Button variant="primary" onClick={open}>
-            {__("Add Images", R3MI_BLOCK_SLUG_GRID)}
+  const uploadImage = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setIsUploading(true);
+
+    try {
+      const response = await fetch(`${wpApiSettings.root}wp/v2/media`, {
+        method: "POST",
+        headers: {
+          "X-WP-Nonce": wpApiSettings.nonce,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Image upload failed");
+      }
+
+      const media = await response.json();
+
+      createSuccessNotice(
+        __("Image uploaded successfully!", R3MI_BLOCK_SLUG_GRID),
+        { type: "snackbar" },
+      );
+
+      addImages(media, true);
+    } catch (error) {
+      console.error(error);
+      createErrorNotice(__("Image upload failed!", R3MI_BLOCK_SLUG_GRID), {
+        type: "snackbar",
+      });
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+
+    event.target.value = "";
+  };
+
+  const mediaDropZone = (
+    <div
+      className={`agb-media-dropzone ${isImageDragging ? "is-dragging" : ""}`}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setIsImageDragging(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setIsImageDragging(false);
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setIsImageDragging(false);
+
+        if (!isUploadingMulti) {
+          uploadImages(event.dataTransfer.files);
+        }
+      }}
+    >
+      {isUploadingMulti ? (
+        <>
+          <Spinner />
+          <p>{__("Uploading images...", R3MI_BLOCK_SLUG_GRID)}</p>
+        </>
+      ) : (
+        <>
+          <span className="dashicons dashicons-cloud-upload" />
+
+          <div className="components-placeholder__instructions">
+            {__("Drag and drop images here", R3MI_BLOCK_SLUG_GRID)}
+          </div>
+
+          <span className="components-placeholder__instructions">
+            {__("or", R3MI_BLOCK_SLUG_GRID)}
+          </span>
+
+          <Button
+            variant="primary"
+            style={{ position: "relative" }}
+            disabled={isUploading}
+          >
+            {__("Browse Images", R3MI_BLOCK_SLUG_GRID)}
+            <input
+              id="agb-media-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(event) => {
+                uploadImages(event.target.files);
+                event.target.value = "";
+              }}
+              className="agb-input-upload"
+            />
           </Button>
-        )}
-      />
-    </MediaUploadCheck>
+        </>
+      )}
+    </div>
   );
+
+  // Media upload button
+  const mediaUpload = (hasImages = false) => {
+    return (
+      <div style={{ width: "100%" }}>
+        {!hasImages && <div style={{ marginBottom: 20 }}>{mediaDropZone}</div>}
+
+        <div className="components-placeholder__fieldset">
+          {/* Direct Upload */}
+          <Button
+            variant="primary"
+            disabled={isUploading}
+            style={{ position: "relative" }}
+          >
+            {isUploading ? (
+              <>
+                <Spinner />
+                {__("Uploading...", R3MI_BLOCK_SLUG_GRID)}
+              </>
+            ) : (
+              __("Upload", R3MI_BLOCK_SLUG_GRID)
+            )}
+            <input
+              id="agb-direct-upload"
+              type="file"
+              accept="image/*"
+              className="agb-input-upload"
+              onChange={uploadImage}
+            />
+          </Button>
+
+          {/* <MediaUploadCheck>
+        <MediaUpload
+          // onSelect={(media) => {
+          //   console.log(media);
+
+          //   setAttributes({
+          //     image: {
+          //       id: media.id,
+          //       url: media.url,
+          //       alt: media.alt,
+          //     },
+          //   });
+          // }}
+          allowedTypes={["image"]}
+          //value={image?.id}
+          onSelect={addImages}
+          value={images.map((image) => image.id).filter(Boolean)}
+          render={({ open }) => (
+            <Button variant="primary" onClick={open}>
+              {__("Upload Image", "advanced-gallery-block")}
+            </Button>
+          )}
+        />
+      </MediaUploadCheck> */}
+
+          {/* WordPress Media Library */}
+          <MediaUploadCheck>
+            <MediaUpload
+              onSelect={addImages}
+              allowedTypes={["image"]}
+              multiple
+              gallery
+              value={images.map((image) => image.id).filter(Boolean)}
+              render={({ open }) => (
+                <Button variant="secondary" onClick={open}>
+                  {__("Media Library", R3MI_BLOCK_SLUG_GRID)}
+                </Button>
+              )}
+            />
+          </MediaUploadCheck>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -537,7 +670,7 @@ export default function Edit({ attributes, setAttributes }) {
               R3MI_BLOCK_SLUG_GRID,
             )}
           >
-            {mediaUpload}
+            {mediaUpload(false)}
           </Placeholder>
         ) : (
           <div className="agb-gallery-preview">
@@ -575,10 +708,11 @@ export default function Edit({ attributes, setAttributes }) {
               </SortableContext>
             </DndContext>
 
-            <div className="agb-gallery-add">{mediaUpload}</div>
+            <div className="agb-gallery-add">{mediaUpload(true)}</div>
           </div>
         )}
       </div>
+      {/* <SnackbarList notices={notices} /> */}
     </>
   );
 }

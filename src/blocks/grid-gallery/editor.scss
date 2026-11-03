@@ -1,9 +1,9 @@
 @import url('../../index.scss');
 
 .agb-gallery-editor {
-    padding: 12px;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
+    // padding: 12px;
+    // border: 1px solid #dcdcde;
+    // border-radius: 4px;
 }
 
 .agb-editor-toolbar {
@@ -57,6 +57,14 @@
         cursor: grab;
     }
 
+    .agb-input-upload {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        opacity: 0;
+    }
 
 }
 
@@ -95,5 +103,37 @@
 .agb-gallery-preview {
     .agb-gallery-add {
         padding-top: 30px;
+    }
+}
+
+.agb-media-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 180px;
+    padding: 25px;
+    border: 2px dashed #c3c4c7;
+    border-radius: 6px;
+    background: #fff;
+    text-align: center;
+    transition: all 0.2s ease;
+
+    .dashicons {
+        font-size: 35px;
+        width: 35px;
+        height: 35px;
+        color: #757575;
+    }
+
+    p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    &.is-dragging {
+        border-color: #2271b1;
+        background: #f0f6fc;
     }
 }
