@@ -16,7 +16,9 @@ if (! defined('ABSPATH')) {
 }
 
 
-define('SLUG', 'r3mi-multi-block');
+define('R3MI_BLOCK_SLUG', 'r3mi-multi-block');
+define('R3MI_BLOCK_SLUG_GRID', 'r3mi-block-gallery-grid');
+// define('R3MI_BLOCK_SLUG_POLAROIDS', 'r3mi-block-gallery-polaroids');
 
 if (!class_exists('R3MI_mulitple_block')) {
 
@@ -25,6 +27,8 @@ if (!class_exists('R3MI_mulitple_block')) {
         public function __construct()
         {
             add_action('init',  array($this, 'register_gallery_block'));
+            add_action('init', array($this, 'agb_register_gallery_patterns'));
+
             add_action('image_size_names_choose', array($this, 'image_size_names_choose_func'));
             add_filter(
                 'block_categories_all',
@@ -32,25 +36,28 @@ if (!class_exists('R3MI_mulitple_block')) {
                 10,
                 2
             );
+
+
+
             self::creating_thumbnails();
         }
 
 
         public function creating_thumbnails()
         {
-            add_image_size('agb-square', 600, 600, true);
-            add_image_size('agb-landscape', 800, 500, true);
-            add_image_size('agb-portrait', 600, 800, true);
-            add_image_size('agb-wide', 1200, 600, true);
+            add_image_size('r3mi-square', 600, 600, true);
+            add_image_size('r3mi-landscape', 800, 500, true);
+            add_image_size('r3mi-portrait', 600, 800, true);
+            add_image_size('r3mi-wide', 1200, 600, true);
         }
 
         public function image_size_names_choose_func($sizes)
         {
             return array_merge($sizes, [
-                'agb-square'    => __('Square', SLUG),
-                'agb-landscape' => __('Landscape', SLUG),
-                'agb-portrait'  => __('Portrait', SLUG),
-                'agb-wide'      => __('Wide', SLUG),
+                'r3mi-square'    => __('Square', R3MI_BLOCK_SLUG),
+                'r3mi-landscape' => __('Landscape', R3MI_BLOCK_SLUG),
+                'r3mi-portrait'  => __('Portrait', R3MI_BLOCK_SLUG),
+                'r3mi-wide'      => __('Wide', R3MI_BLOCK_SLUG),
             ]);
         }
 
@@ -61,8 +68,8 @@ if (!class_exists('R3MI_mulitple_block')) {
             array_unshift(
                 $categories,
                 array(
-                    'slug'  => SLUG,
-                    'title' => __('R3Mi Multi Block', SLUG),
+                    'slug'  => R3MI_BLOCK_SLUG,
+                    'title' => __('R3Mi Multi Block', R3MI_BLOCK_SLUG),
                     'icon'  => 'info-outline',
                 )
             );
@@ -98,47 +105,47 @@ if (!class_exists('R3MI_mulitple_block')) {
                     error_log('AGB: Registered block: ' . $block_dir);
                 }
             }
+        }
 
-            // $blocks = [
-            //     'grid-gallery',
-            //     'polaroids-gallery',
-            // ];
+        function agb_register_gallery_patterns()
+        {
+            // It will show in the pattern tab
+            register_block_pattern(
+                'multiblock/grid-gallery',
+                array(
+                    'title'       => __('Grid Gallery ', R3MI_BLOCK_SLUG_GRID),
+                    'description' => __('A grid gallery layout.', R3MI_BLOCK_SLUG_GRID),
+                    'categories'  => array('gallery', 'portfolio'),
+                    'content'     => '
+                                    <!-- wp:group {"layout":{"type":"constrained"}} -->
+                                    <div class="wp-block-group">
 
-            // foreach ($blocks as $block) {
-            //     register_block_type(
-            //         __DIR__ . '/build/blocks/' . $block
-            //     );
-            // }
+                                        <!-- wp:heading {"textAlign":"center"} -->
+                                        <h2 class="wp-block-heading has-text-align-center">
+                                            My Portfolio
+                                        </h2>
+                                        <!-- /wp:heading -->
+
+                                        <!-- wp:paragraph {"align":"center"} -->
+                                        <p class="has-text-align-center">
+                                            Explore my latest photography.
+                                        </p>
+                                        <!-- /wp:paragraph -->
+
+                                        <!-- wp:gallery {"columns":3,"linkTo":"none"} -->
+                                        <figure class="wp-block-gallery has-nested-images columns-3">
+                                        </figure>
+                                        <!-- /wp:gallery -->
+
+                                    </div>
+                                    <!-- /wp:group -->
+                                ',
+                    'source' => 'plugin',
+                    'viewportWidth' => 1200,
+                )
+            );
         }
     }
 
     new R3MI_mulitple_block;
-
-    // add_action('init', function () {
-    //     error_log(
-    //         print_r(
-    //             WP_Block_Type_Registry::get_instance()->get_all_registered(),
-    //             true
-    //         )
-    //     );
-    // }, 20);
 }
-
-
-
-// function r3mi_register_blocks()
-// {
-
-//     $blocks = [
-//         'grid-gallery',
-//         'polaroids-gallery',
-//     ];
-
-//     foreach ($blocks as $block) {
-//         register_block_type(
-//             __DIR__ . '/build/blocks/' . $block
-//         );
-//     }
-// }
-
-// add_action('init', 'r3mi_register_blocks');

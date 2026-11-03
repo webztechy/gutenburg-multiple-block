@@ -35,7 +35,7 @@ export default function Save({ attributes }) {
 
           return (
             <figure
-              className={`agb-gallery-item${
+              className={`agb-gallery-item ${
                 roundedCorners ? " is-rounded" : ""
               }`}
               key={image.id || `${displayUrl}-${index}`}

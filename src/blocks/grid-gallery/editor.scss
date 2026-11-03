@@ -35,7 +35,7 @@
             text-align: center;
         }
 
-        &:hover .agb-image-actions{
+        &:hover .agb-image-actions {
             display: block;
         }
     }
@@ -56,8 +56,41 @@
         opacity: 0;
         cursor: grab;
     }
+
+
 }
 
+.agb-image-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    //background: #fff;
+    border-radius: 5px;
+    //box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.agb-image-toolbar-button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0 !important;
+    justify-content: center;
+}
+
+.agb-image-toolbar-button.is-active {
+    color: #2271b1;
+    background: #e5f0fa;
+}
+
+.agb-image-toolbar-button svg {
+    width: 18px;
+    height: 18px;
+}
 
 .agb-gallery-preview {
     .agb-gallery-add {

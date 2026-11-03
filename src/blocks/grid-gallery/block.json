@@ -7,11 +7,7 @@
   "category": "r3mi-multi-block",
   "icon": "grid-view",
   "description": "Create a responsive image grid gallery with adjustable columns and spacing, featuring an image enlargement (lightbox) option.",
-  "keywords": [
-    "gallery",
-    "images",
-    "photos"
-  ],
+  "keywords": ["gallery", "images", "photos"],
   "textdomain": "gutenburg-multiple-block",
   "attributes": {
     "images": {
@@ -41,6 +37,10 @@
     "backgroundColor": {
       "type": "string",
       "default": "#ffffff"
+    },
+    "layout": {
+      "type": "string",
+      "default": "grid"
     }
   },
   "example": {

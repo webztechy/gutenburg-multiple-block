@@ -13,7 +13,6 @@ registerBlockType(metadata.name, {
   save: Save,
 });
 
-
 // export default {
 //   name: metadata.name,
 //   settings: {

@@ -1,10 +1,14 @@
 import { __ } from "@wordpress/i18n";
 import {
   useBlockProps,
+  useInnerBlocksProps,
   MediaUpload,
   MediaUploadCheck,
   InspectorControls,
+  InnerBlocks,
+  BlockControls,
 } from "@wordpress/block-editor";
+
 
 import {
   Button,
@@ -16,6 +20,12 @@ import {
   ColorPicker,
   ColorPalette,
   BaseControl,
+  Toolbar,
+  ToolbarButton,
+  ToolbarGroup,
+  ToolbarDropdownMenu,
+  MenuItem,
+  Dashicon,
 } from "@wordpress/components";
 
 import {
@@ -37,11 +47,13 @@ import {
 
 import { CSS } from "@dnd-kit/utilities";
 
+const R3MI_BLOCK_SLUG_GRID = "r3mi-block-gallery-grid";
+
 const imageSizes = [
-  { label: "Square (600 × 600)", value: "agb-square" },
-  { label: "Landscape (800 × 500)", value: "agb-landscape" },
-  { label: "Portrait (600 × 800)", value: "agb-portrait" },
-  { label: "Wide (1200 × 600)", value: "agb-wide" },
+  { label: "Square (600 × 600)", value: "r3mi-square" },
+  { label: "Landscape (800 × 500)", value: "r3mi-landscape" },
+  { label: "Portrait (600 × 800)", value: "r3mi-portrait" },
+  { label: "Wide (1200 × 600)", value: "r3mi-wide" },
   { label: "Original", value: "full" },
 ];
 
@@ -57,6 +69,7 @@ const colors = [
  * Sortable gallery image.
  * Keep this component outside Edit().
  */
+
 function SortableImage({
   image,
   index,
@@ -65,6 +78,7 @@ function SortableImage({
   showCaptions,
   replaceImage,
   removeImage,
+  updateImage,
 }) {
   const {
     attributes,
@@ -99,6 +113,33 @@ function SortableImage({
         }}
       />
 
+      {/* Individual image toolbar */}
+      {/* <div className="agb-image-toolbar">
+        <ToolbarGroup>
+          <ToolbarButton
+            icon="visibility"
+            label={__("Lightbox", R3MI_BLOCK_SLUG_GRID)}
+            isActive={!!image.agbLightbox}
+            onClick={() =>
+              updateImage(index, {
+                agbLightbox: !image.agbLightbox,
+              })
+            }
+          />
+
+          <ToolbarButton
+            icon="search"
+            label={__("Zoom", R3MI_BLOCK_SLUG_GRID)}
+            isActive={!!image.agbZoom}
+            onClick={() =>
+              updateImage(index, {
+                agbZoom: !image.agbZoom,
+              })
+            }
+          />
+        </ToolbarGroup>
+      </div> */}
+
       {/* Drag handle */}
       <button
         type="button"
@@ -106,7 +147,7 @@ function SortableImage({
         {...attributes}
         {...listeners}
         aria-label={`Drag image ${index + 1}`}
-        title={__("Drag to reorder", "advanced-gallery-block")}
+        title={__("Drag to reorder", R3MI_BLOCK_SLUG_GRID)}
       >
         ⠿
       </button>
@@ -115,6 +156,7 @@ function SortableImage({
         <figcaption>{image.caption}</figcaption>
       )}
 
+      {/* Image actions */}
       <div className="agb-image-actions">
         <MediaUploadCheck>
           <MediaUpload
@@ -123,11 +165,13 @@ function SortableImage({
             value={image.id}
             render={({ open }) => (
               <Button variant="secondary" size="small" onClick={open}>
-                {__("Replace", "advanced-gallery-block")}
+                {__("Replace", R3MI_BLOCK_SLUG_GRID)}
               </Button>
             )}
           />
         </MediaUploadCheck>
+
+        <Dashicon icon="visibility" />
 
         <Button
           variant="tertiary"
@@ -135,10 +179,86 @@ function SortableImage({
           size="small"
           onClick={() => removeImage(index)}
         >
-          {__("Remove", "advanced-gallery-block")}
+          {__("Remove", R3MI_BLOCK_SLUG_GRID)}
         </Button>
       </div>
     </div>
+  );
+}
+
+function GalleryToolbar({ setAttributes, columns }) {
+  return (
+    <BlockControls>
+      {/* <ToolbarGroup>
+        <ToolbarButton
+          icon="grid-view"
+          label="Grid Layout"
+          onClick={() => setAttributes({ layout: "grid" })}
+        />
+
+        <ToolbarButton
+          icon="screenoptions"
+          label="Masonry Layout"
+          onClick={() => setAttributes({ layout: "masonry" })}
+        />
+      </ToolbarGroup> */}
+
+      <ToolbarGroup>
+        <ToolbarDropdownMenu
+          icon="screenoptions"
+          label="Gap"
+          controls={[
+            {
+              title: "10",
+              onClick: () => setAttributes({ gap: 10 }),
+            },
+            {
+              title: "20",
+              onClick: () => setAttributes({ gap: 20 }),
+            },
+            {
+              title: "30",
+              onClick: () => setAttributes({ gap: 30 }),
+            },
+            {
+              title: "40",
+              onClick: () => setAttributes({ gap: 40 }),
+            },
+            {
+              title: "50",
+              onClick: () => setAttributes({ gap: 50 }),
+            },
+          ]}
+        />
+
+        <ToolbarDropdownMenu
+          icon="columns"
+          label="Gallery Columns"
+          controls={[
+            {
+              title: "2 Columns",
+              onClick: () => setAttributes({ columns: 2 }),
+            },
+            {
+              title: "3 Columns",
+              onClick: () => setAttributes({ columns: 3 }),
+            },
+            {
+              title: "4 Columns",
+              onClick: () => setAttributes({ columns: 4 }),
+            },
+            {
+              title: "5 Columns",
+              onClick: () => setAttributes({ columns: 5 }),
+            },
+            {
+              title: "6 Columns",
+              onClick: () => setAttributes({ columns: 6 }),
+            },
+          ]}
+        />
+      </ToolbarGroup>
+    </BlockControls>
   );
 }
 
@@ -146,7 +266,7 @@ export default function Edit({ attributes, setAttributes }) {
   const {
     images = [],
     columns = 3,
-    gap = 12,
+    gap = 8,
     roundedCorners = true,
     showCaptions = false,
     imageSize = "full",
@@ -186,6 +306,8 @@ export default function Edit({ attributes, setAttributes }) {
             : item.caption?.raw || item.caption?.rendered || "",
         linkUrl: "",
         newTab: false,
+        agbLightbox: false,
+        agbZoom: false,
       }))
       .filter((image) => image.url);
 
@@ -230,7 +352,6 @@ export default function Edit({ attributes, setAttributes }) {
   // Handle drag and drop
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) return;
 
     const oldIndex = images.findIndex(
@@ -259,7 +380,7 @@ export default function Edit({ attributes, setAttributes }) {
         value={images.map((image) => image.id).filter(Boolean)}
         render={({ open }) => (
           <Button variant="primary" onClick={open}>
-            {__("Add Images", "advanced-gallery-block")}
+            {__("Add Images", R3MI_BLOCK_SLUG_GRID)}
           </Button>
         )}
       />
@@ -275,15 +396,19 @@ export default function Edit({ attributes, setAttributes }) {
           tabs={[
             {
               name: "general",
-              title: __("General", "advanced-gallery-block"),
+              title: __("General", R3MI_BLOCK_SLUG_GRID),
+            },
+            {
+              name: "images",
+              title: __("Images", R3MI_BLOCK_SLUG_GRID),
             },
             {
               name: "style",
-              title: __("Style", "advanced-gallery-block"),
+              title: __("Style", R3MI_BLOCK_SLUG_GRID),
             },
             {
               name: "lightbox",
-              title: __("Lightbox", "advanced-gallery-block"),
+              title: __("Lightbox", R3MI_BLOCK_SLUG_GRID),
             },
           ]}
         >
@@ -292,8 +417,9 @@ export default function Edit({ attributes, setAttributes }) {
               case "general":
                 return (
                   <div className="agb-tab-content">
+                    <Dashicon icon="visibility" />
                     <RangeControl
-                      label={__("Columns", "advanced-gallery-block")}
+                      label={__("Columns", R3MI_BLOCK_SLUG_GRID)}
                       value={columns}
                       onChange={(value) => setAttributes({ columns: value })}
                       min={1}
@@ -301,7 +427,7 @@ export default function Edit({ attributes, setAttributes }) {
                     />
 
                     <RangeControl
-                      label={__("Image Gap", "advanced-gallery-block")}
+                      label={__("Image Gap", R3MI_BLOCK_SLUG_GRID)}
                       value={gap}
                       onChange={(value) => setAttributes({ gap: value })}
                       min={0}
@@ -309,14 +435,14 @@ export default function Edit({ attributes, setAttributes }) {
                     />
 
                     <SelectControl
-                      label={__("Image Size", "advanced-gallery-block")}
+                      label={__("Image Size", R3MI_BLOCK_SLUG_GRID)}
                       value={imageSize}
                       options={imageSizes}
                       onChange={(value) => setAttributes({ imageSize: value })}
                     />
 
                     <ToggleControl
-                      label={__("Show Captions", "advanced-gallery-block")}
+                      label={__("Show Captions", R3MI_BLOCK_SLUG_GRID)}
                       checked={showCaptions}
                       onChange={(value) =>
                         setAttributes({ showCaptions: value })
@@ -325,11 +451,23 @@ export default function Edit({ attributes, setAttributes }) {
                   </div>
                 );
 
+              case "images":
+                return (
+                  <div className="agb-tab-content">
+                    <p>
+                      {__(
+                        "Images settings can be added here.",
+                        R3MI_BLOCK_SLUG_GRID,
+                      )}
+                    </p>
+                  </div>
+                );
+
               case "style":
                 return (
                   <div className="agb-tab-content">
                     <ToggleControl
-                      label={__("Rounded Corners", "advanced-gallery-block")}
+                      label={__("Rounded Corners", R3MI_BLOCK_SLUG_GRID)}
                       checked={roundedCorners}
                       onChange={(value) =>
                         setAttributes({ roundedCorners: value })
@@ -337,7 +475,7 @@ export default function Edit({ attributes, setAttributes }) {
                     />
 
                     <BaseControl
-                      label={__("Background Color", "advanced-gallery-block")}
+                      label={__("Background Color", R3MI_BLOCK_SLUG_GRID)}
                     >
                       <ColorPalette
                         colors={colors}
@@ -354,7 +492,7 @@ export default function Edit({ attributes, setAttributes }) {
                     <BaseControl
                       label={__(
                         "Custom Background Color",
-                        "advanced-gallery-block",
+                        R3MI_BLOCK_SLUG_GRID,
                       )}
                     >
                       <ColorPicker
@@ -374,7 +512,7 @@ export default function Edit({ attributes, setAttributes }) {
                     <p>
                       {__(
                         "Lightbox settings can be added here.",
-                        "advanced-gallery-block",
+                        R3MI_BLOCK_SLUG_GRID,
                       )}
                     </p>
                   </div>
@@ -387,14 +525,16 @@ export default function Edit({ attributes, setAttributes }) {
         </TabPanel>
       </InspectorControls>
 
+      <GalleryToolbar columns={columns} setAttributes={setAttributes} />
+
       <div {...blockProps}>
         {images.length === 0 ? (
           <Placeholder
             icon="format-gallery"
-            label={__("Advanced Gallery", "advanced-gallery-block")}
+            label={__("Advanced Gallery", R3MI_BLOCK_SLUG_GRID)}
             instructions={__(
               "Select images to build your gallery.",
-              "advanced-gallery-block",
+              R3MI_BLOCK_SLUG_GRID,
             )}
           >
             {mediaUpload}
@@ -442,3 +582,23 @@ export default function Edit({ attributes, setAttributes }) {
     </>
   );
 }
+
+/* 
+<ToolbarDropdownMenu
+    icon="grid-view"
+    label={__("Gallery Layout", R3MI_BLOCK_SLUG_GRID)}
+    controls={[
+        {
+            title: __("Grid", R3MI_BLOCK_SLUG_GRID),
+            icon: "grid-view",
+            isActive: layout === "grid",
+            onClick: () => setAttributes({ layout: "grid" }),
+        },
+        {
+            title: __("Masonry", R3MI_BLOCK_SLUG_GRID),
+            icon: "screenoptions",
+            isActive: layout === "masonry",
+            onClick: () => setAttributes({ layout: "masonry" }),
+        },
+    ]}
+/> */
