@@ -1,53 +1,45 @@
-import { __ } from "@wordpress/i18n";
 import {
-  useBlockProps,
-  useInnerBlocksProps,
+  InspectorControls,
   MediaUpload,
   MediaUploadCheck,
-  InspectorControls,
-  InnerBlocks,
-  BlockControls,
+  useBlockProps,
 } from "@wordpress/block-editor";
+import { __ } from "@wordpress/i18n";
 
 import {
-  Button,
-  TabPanel,
-  RangeControl,
-  ToggleControl,
-  Placeholder,
-  SelectControl,
-  ColorPicker,
-  ColorPalette,
   BaseControl,
-  Toolbar,
+  Button,
+  ColorPalette,
+  ColorPicker,
+  Dashicon,
+  Placeholder,
+  RangeControl,
+  SelectControl,
+  Spinner,
+  TabPanel,
+  ToggleControl,
   ToolbarButton,
   ToolbarGroup,
-  ToolbarDropdownMenu,
-  MenuItem,
-  Dashicon,
-  SnackbarList,
-  Spinner,
 } from "@wordpress/components";
+import { useDispatch } from "@wordpress/data";
 import { useState } from "@wordpress/element";
-
-import { useDispatch, useSelect } from "@wordpress/data";
 import { store as noticesStore } from "@wordpress/notices";
 
 import {
-  DndContext,
   closestCenter,
-  PointerSensor,
+  DndContext,
   KeyboardSensor,
+  PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 
 import {
-  SortableContext,
-  useSortable,
-  rectSortingStrategy,
-  sortableKeyboardCoordinates,
   arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
@@ -84,7 +76,8 @@ function SortableImage({
   showCaptions,
   replaceImage,
   removeImage,
-  updateImage,
+  onSelect,
+  selected,
 }) {
   const {
     attributes,
@@ -108,8 +101,68 @@ function SortableImage({
     <div
       ref={setNodeRef}
       style={style}
-      className={`agb-gallery-item ${isDragging ? "is-dragging" : ""}`}
+      className={`agb-gallery-item ${isDragging ? "is-dragging" : ""} ${
+        selected ? "is-selected" : ""
+      }`}
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect(index);
+      }}
     >
+      {selected && (
+        <div className="agb-image-toolbar">
+          <ToolbarGroup>
+            <ToolbarButton
+              icon="edit"
+              label="Replace image"
+              onClick={() => replaceImage(index)}
+            />
+
+            <ToolbarButton
+              icon="trash"
+              label="Remove image"
+              onClick={() => removeImage(index)}
+            />
+          </ToolbarGroup>
+        </div>
+      )}
+
+      {/* <ToolbarGroup>
+        <MediaUploadCheck>
+          <MediaUpload
+            onSelect={(media) => replaceImage(index, media)}
+            allowedTypes={["image"]}
+            render={({ open }) => (
+              <ToolbarButton
+                icon="replace"
+                label={__("Replace image", "advanced-gallery-block")}
+                onClick={open}
+              />
+            )}
+          />
+        </MediaUploadCheck>
+
+        <ToolbarButton
+          icon={arrowLeft}
+          label={__("Move left", "advanced-gallery-block")}
+          disabled={index === 0}
+          onClick={() => moveImage(index, index - 1)}
+        />
+
+        <ToolbarButton
+          icon={arrowRight}
+          label={__("Move right", "advanced-gallery-block")}
+          disabled={index === images.length - 1}
+          onClick={() => moveImage(index, index + 1)}
+        />
+
+        <ToolbarButton
+          icon={trash}
+          label={__("Remove image", "advanced-gallery-block")}
+          onClick={() => removeImage(index)}
+        />
+      </ToolbarGroup> */}
+
       <img
         src={image.sizes?.[imageSize]?.url || image.url}
         alt={image.alt || ""}
@@ -162,11 +215,11 @@ function SortableImage({
 
 export default function Edit({ attributes, setAttributes }) {
   const { createSuccessNotice, createErrorNotice } = useDispatch(noticesStore);
-  const notices = useSelect((select) => select(noticesStore).getNotices(), []);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingMulti, setIsUploadingMulti] = useState(false);
   const [isImageDragging, setIsImageDragging] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const {
     images = [],
@@ -412,7 +465,8 @@ export default function Edit({ attributes, setAttributes }) {
         </>
       ) : (
         <>
-          <span className="dashicons dashicons-cloud-upload" />
+          {/* <span className="dashicons dashicons-cloud-upload" /> */}
+          <Dashicon icon="cloud-upload" />
 
           <div className="components-placeholder__instructions">
             {__("Drag and drop images here", R3MI_BLOCK_SLUG_GRID)}
@@ -475,31 +529,6 @@ export default function Edit({ attributes, setAttributes }) {
             />
           </Button>
 
-          {/* <MediaUploadCheck>
-        <MediaUpload
-          // onSelect={(media) => {
-          //   console.log(media);
-
-          //   setAttributes({
-          //     image: {
-          //       id: media.id,
-          //       url: media.url,
-          //       alt: media.alt,
-          //     },
-          //   });
-          // }}
-          allowedTypes={["image"]}
-          //value={image?.id}
-          onSelect={addImages}
-          value={images.map((image) => image.id).filter(Boolean)}
-          render={({ open }) => (
-            <Button variant="primary" onClick={open}>
-              {__("Upload Image", "advanced-gallery-block")}
-            </Button>
-          )}
-        />
-      </MediaUploadCheck> */}
-
           {/* WordPress Media Library */}
           <MediaUploadCheck>
             <MediaUpload
@@ -551,6 +580,7 @@ export default function Edit({ attributes, setAttributes }) {
                 return (
                   <div className="agb-tab-content">
                     <Dashicon icon="visibility" />
+                    <Dashicon icon="cloud-upload" />
                     <RangeControl
                       label={__("Columns", R3MI_BLOCK_SLUG_GRID)}
                       value={columns}
@@ -702,6 +732,8 @@ export default function Edit({ attributes, setAttributes }) {
                       showCaptions={showCaptions}
                       replaceImage={replaceImage}
                       removeImage={removeImage}
+                      selected={selectedImage === index}
+                      onSelect={setSelectedImage}
                     />
                   ))}
                 </div>
@@ -712,27 +744,6 @@ export default function Edit({ attributes, setAttributes }) {
           </div>
         )}
       </div>
-      {/* <SnackbarList notices={notices} /> */}
     </>
   );
 }
-
-/* 
-<ToolbarDropdownMenu
-    icon="grid-view"
-    label={__("Gallery Layout", R3MI_BLOCK_SLUG_GRID)}
-    controls={[
-        {
-            title: __("Grid", R3MI_BLOCK_SLUG_GRID),
-            icon: "grid-view",
-            isActive: layout === "grid",
-            onClick: () => setAttributes({ layout: "grid" }),
-        },
-        {
-            title: __("Masonry", R3MI_BLOCK_SLUG_GRID),
-            icon: "screenoptions",
-            isActive: layout === "masonry",
-            onClick: () => setAttributes({ layout: "masonry" }),
-        },
-    ]}
-/> */

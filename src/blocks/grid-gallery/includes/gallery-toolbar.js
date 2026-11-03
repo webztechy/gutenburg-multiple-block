@@ -1,13 +1,6 @@
+import { BlockControls } from "@wordpress/block-editor";
 
-import {
-  BlockControls
-} from "@wordpress/block-editor";
-
-import {
-  ToolbarDropdownMenu,
-  ToolbarGroup
-} from "@wordpress/components";
-
+import { ToolbarDropdownMenu, ToolbarGroup } from "@wordpress/components";
 
 export function GalleryToolbar({ setAttributes, columns }) {
   return (
@@ -70,3 +63,23 @@ export function GalleryToolbar({ setAttributes, columns }) {
     </BlockControls>
   );
 }
+
+/* 
+<ToolbarDropdownMenu
+    icon="grid-view"
+    label={__("Gallery Layout", R3MI_BLOCK_SLUG_GRID)}
+    controls={[
+        {
+            title: __("Grid", R3MI_BLOCK_SLUG_GRID),
+            icon: "grid-view",
+            isActive: layout === "grid",
+            onClick: () => setAttributes({ layout: "grid" }),
+        },
+        {
+            title: __("Masonry", R3MI_BLOCK_SLUG_GRID),
+            icon: "screenoptions",
+            isActive: layout === "masonry",
+            onClick: () => setAttributes({ layout: "masonry" }),
+        },
+    ]}
+/> */
